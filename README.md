@@ -39,7 +39,7 @@ Expected results on TSB-AD-M (200 files, seed=2027):
 
 | VUS-PR | VUS-ROC | AUC-ROC | AUC-PR | BestF1 | RangeF1 |
 |--------|---------|---------|--------|--------|---------|
-| 0.478  | 0.782   | 0.756   | 0.429  | 0.465  | 0.456   |
+| 0.487  | 0.788   | 0.760   | 0.434  | 0.470  | 0.462   |
 
 Results are written to `results/full_model/summary_metrics.csv` and `categorical_metrics.csv`.
 
@@ -53,11 +53,11 @@ This runs all five configurations sequentially:
 
 | Configuration | VUS-PR |
 |---------------|--------|
-| Full model    | 0.478  |
-| No channel encoder | 0.438 |
-| No Mahalanobis (KNN) | 0.470 |
-| No velocity pretext | 0.441 |
-| No velocity scoring | 0.472 |
+| Full model    | 0.487  |
+| No channel encoder | 0.443 |
+| No Mahalanobis (KNN) | 0.477 |
+| No velocity pretext | 0.450 |
+| No velocity scoring | 0.483 |
 
 To reproduce the mean-over-10-seeds results from the paper, run each ablation with seeds `2000 389 2 2027 54321 789 1234 5678 9999 6789` and average VUS-PR across seeds.
 
@@ -82,6 +82,19 @@ CLI overrides take priority over the YAML config:
 python main.py --config configs/full_model.yaml --data_dir /data/TSB-AD-M --seed 42
 ```
 
+## Embedding Geometry Diagnostics
+
+`utils/geometry.py` exposes `compute_embedding_geometry(model, train_loader, device)`, which computes four spectral diagnostics of the training embedding distribution:
+
+| Metric | Description |
+|--------|-------------|
+| `eff_rank_pr` | Participation-ratio effective rank / d |
+| `eff_rank_entropy` | Entropy effective rank / d |
+| `n_active_dims` | Number of eigenvalues above 1e-10 |
+| `var_top1` | Fraction of variance in the leading component |
+
+These are the metrics used in the geometry analysis of the paper (Section 4.3 and Appendix).
+
 ## Project Structure
 
 ```
@@ -92,6 +105,7 @@ VACE/
 ├── utils/
 │   ├── data_preprocess.py   # Data loading, patch creation, sliding window
 │   ├── evaluation.py        # Mahalanobis, velocity bank, and KNN scorers
+│   ├── geometry.py          # Embedding geometry diagnostics (eff. rank, var_top1, active dims)
 │   ├── metrics.py           # VUS-PR, VUS-ROC, AUC-ROC, AUC-PR, F1 metrics
 │   └── utils.py             # Memory bank (KMeans coreset), RevIN
 ├── affiliation/             # Affiliation-F metric (from TSB-AD)
