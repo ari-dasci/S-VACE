@@ -39,7 +39,7 @@ Expected results on TSB-AD-M (200 files, seed=2027):
 
 | VUS-PR | VUS-ROC | AUC-ROC | AUC-PR | BestF1 | RangeF1 |
 |--------|---------|---------|--------|--------|---------|
-| 0.487  | 0.788   | 0.760   | 0.434  | 0.470  | 0.462   |
+| 0.478  | 0.782   | 0.756   | 0.429  | 0.465  | 0.456   |
 
 Results are written to `results/full_model/summary_metrics.csv` and `categorical_metrics.csv`.
 
@@ -53,11 +53,11 @@ This runs all five configurations sequentially:
 
 | Configuration | VUS-PR |
 |---------------|--------|
-| Full model    | 0.487  |
-| No channel encoder | 0.443 |
-| No Mahalanobis (KNN) | 0.477 |
-| No velocity pretext | 0.450 |
-| No velocity scoring | 0.483 |
+| Full model    | 0.478  |
+| No channel encoder | 0.438 |
+| No Mahalanobis  | 0.470 |
+| No velocity pretext | 0.441 |
+| No velocity scoring | 0.472 |
 
 To reproduce the mean-over-10-seeds results from the paper, run each ablation with seeds `2000 389 2 2027 54321 789 1234 5678 9999 6789` and average VUS-PR across seeds.
 
