@@ -30,9 +30,8 @@ class VACE:
     def __init__(self, data_dir, output_dir=None, patch_size=64,
                  num_iters=20, lr=1e-4, batch_size=512, random_seed=2027,
                  device=None, use_revin=True,
-                 no_wandb=True, encoder="PatchChannelEncoder",
+                 encoder="PatchChannelEncoder",
                  datasets=None, file_list=None,
-                 wandb_project="VACE", wandb_run_name=None,
                  pretext_fraction=1.0, use_mahalanobis=True,
                  velocity_weight=1.0, velocity_delta=48,
                  channel_expansion=8, use_bn=True):
@@ -46,7 +45,6 @@ class VACE:
         self.random_seed = random_seed
         self.device = device if device else torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.use_revin = use_revin
-        self.no_wandb = no_wandb
 
         if encoder not in ENCODER_REGISTRY:
             raise ValueError(f"Unknown encoder '{encoder}'. Choose from: {list(ENCODER_REGISTRY)}")
@@ -59,8 +57,6 @@ class VACE:
                 lines = [l.strip() for l in f if l.strip()]
             self.file_list = set(lines[1:] if lines[0].lower() == 'file_name' else lines)
 
-        self.wandb_project = wandb_project
-        self.wandb_run_name = wandb_run_name
         self.pretext_fraction = pretext_fraction
         self.use_mahalanobis = use_mahalanobis
         self.velocity_weight = velocity_weight
@@ -69,32 +65,6 @@ class VACE:
         self.use_bn = use_bn
 
     def run(self):
-        if not self.no_wandb:
-            try:
-                import wandb
-                wandb.init(
-                    project=self.wandb_project,
-                    name=self.wandb_run_name or "vace_run",
-                    config={
-                        "data_dir": self.data_dir,
-                        "patch_size": self.patch_size,
-                        "num_iters": self.num_iters,
-                        "lr": self.lr,
-                        "batch_size": self.batch_size,
-                        "random_seed": self.random_seed,
-                        "use_revin": self.use_revin,
-                        "encoder": self.encoder,
-                        "datasets": self.datasets or "all",
-                        "pretext_fraction": self.pretext_fraction,
-                        "use_mahalanobis": self.use_mahalanobis,
-                        "velocity_weight": self.velocity_weight,
-                        "velocity_delta": self.velocity_delta,
-                    }
-                )
-            except ImportError:
-                print("[WARN] wandb not installed — running without logging.")
-                self.no_wandb = True
-
         random.seed(self.random_seed)
         np.random.seed(self.random_seed)
         torch.manual_seed(self.random_seed)
@@ -167,7 +137,6 @@ class VACE:
                 pretext_step=self.patch_size,
                 lr=self.lr,
                 file_name=file_name,
-                no_wandb=self.no_wandb,
                 pretext_fraction=self.pretext_fraction,
             )
 
@@ -224,24 +193,6 @@ class VACE:
                   f"BestF1={results['Standard-F1']:.4f}  RangeF1={results['R-based-F1']:.4f}  "
                   f"({t1-t0:.1f}s)")
 
-            if not self.no_wandb:
-                import wandb
-                wandb.log({
-                    f"{category}/{ds_id}/AUC-ROC":  results['AUC-ROC'],
-                    f"{category}/{ds_id}/AUC-PR":   results['AUC-PR'],
-                    f"{category}/{ds_id}/VUS-PR":   results['VUS-PR'],
-                    f"{category}/{ds_id}/VUS-ROC":  results['VUS-ROC'],
-                    f"{category}/{ds_id}/BestF1":   results['Standard-F1'],
-                    f"{category}/{ds_id}/RangeF1":  results['R-based-F1'],
-                    f"{category}/{ds_id}/time_s":   t1 - t0,
-                    "eval/AUC-ROC": results['AUC-ROC'],
-                    "eval/AUC-PR":  results['AUC-PR'],
-                    "eval/VUS-PR":  results['VUS-PR'],
-                    "eval/VUS-ROC": results['VUS-ROC'],
-                    "eval/BestF1":  results['Standard-F1'],
-                    "eval/RangeF1": results['R-based-F1'],
-                })
-
             if self.output_dir:
                 summary_rows.append({
                     'file': file_name, 'Category': category,
@@ -268,16 +219,6 @@ class VACE:
             print(f"  {cat_name:20s}  N={len(cat_results):3d}  "
                   f"VUS-PR={np.mean([r['VUS-PR'] for r in cat_results]):.4f}  "
                   f"AUC-ROC={np.mean([r['AUC-ROC'] for r in cat_results]):.4f}")
-
-        if not self.no_wandb:
-            import wandb
-            wandb.run.summary["mean_AUC-ROC"] = dist_auroc
-            wandb.run.summary["mean_AUC-PR"]  = dist_auprc
-            wandb.run.summary["mean_VUS-PR"]  = dist_vuspr
-            wandb.run.summary["mean_VUS-ROC"] = dist_vusroc
-            wandb.run.summary["mean_BestF1"]  = dist_F1
-            wandb.run.summary["mean_RangeF1"] = dist_RF1
-            wandb.finish()
 
         if self.output_dir and summary_rows:
             summary_df = pd.concat([
@@ -314,9 +255,8 @@ if __name__ == "__main__":
     defaults = dict(
         data_dir=None, output_dir=None, patch_size=96, num_iters=20,
         batch_size=512, lr=1e-4, seed=2027, use_revin=True,
-        no_wandb=True, encoder='PatchChannelEncoder',
+        encoder='PatchChannelEncoder',
         datasets=None, file_list=None,
-        wandb_project='VACE', wandb_run_name=None,
         pretext_fraction=1.0, use_mahalanobis=True,
         velocity_weight=1.0, velocity_delta=48,
         channel_expansion=8, use_bn=True,
@@ -366,12 +306,9 @@ if __name__ == "__main__":
         lr=final['lr'],
         random_seed=final['seed'],
         use_revin=final['use_revin'],
-        no_wandb=final['no_wandb'],
         encoder=final['encoder'],
         datasets=final['datasets'],
         file_list=final['file_list'],
-        wandb_project=final['wandb_project'],
-        wandb_run_name=final['wandb_run_name'],
         pretext_fraction=final['pretext_fraction'],
         use_mahalanobis=final['use_mahalanobis'],
         velocity_weight=final['velocity_weight'],
