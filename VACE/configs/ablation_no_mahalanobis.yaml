@@ -1,0 +1,18 @@
+data_dir: "data/TSB-AD-M"
+patch_size: 96
+num_iters: 20
+batch_size: 512
+lr: 1.0e-4
+seed: 2027
+use_revin: true
+
+encoder: "PatchChannelEncoder"
+channel_expansion: 8
+
+pretext_fraction: 1.0
+# Ablation: replace Mahalanobis scorer with memory bank KNN
+use_mahalanobis: false
+velocity_weight: 1.0
+velocity_delta: 48
+
+no_wandb: true

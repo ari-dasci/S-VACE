@@ -1,0 +1,17 @@
+data_dir: "data/TSB-AD-M"
+patch_size: 96
+num_iters: 20
+batch_size: 512
+lr: 1.0e-4
+seed: 2027
+use_revin: true
+
+# Ablation: replace channel-aware encoder with standard PatchEncoder
+encoder: "PatchEncoder"
+
+pretext_fraction: 1.0
+use_mahalanobis: true
+velocity_weight: 1.0
+velocity_delta: 48
+
+no_wandb: true
