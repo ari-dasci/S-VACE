@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 
 def train_model(model, train_loader, train_patches, device, num_iter=200,
-                pretext_step=64, lr=1e-4, file_name=None, no_wandb=False,
+                pretext_step=64, lr=1e-4, file_name=None,
                 pretext_fraction=0.1):
     """Train the encoder with velocity pretext followed by BN calibration.
 
@@ -16,20 +16,6 @@ def train_model(model, train_loader, train_patches, device, num_iter=200,
 
     Phase 2 (remaining iters): no loss, BN statistics calibration only.
     """
-    try:
-        import wandb
-        _wandb_ok = not no_wandb
-    except ImportError:
-        _wandb_ok = False
-
-    if file_name:
-        parts = file_name.replace('.csv', '').split('_')
-        category = parts[1] if len(parts) > 1 else "unknown"
-        ds_id = f"id_{parts[3]}" if len(parts) > 3 else parts[0]
-        wandb_prefix = f"{category}/{ds_id}"
-    else:
-        wandb_prefix = "unknown"
-
     initial_lr = lr
     final_lr = lr / 10
 
@@ -108,15 +94,6 @@ def train_model(model, train_loader, train_patches, device, num_iter=200,
                     model.embedding(batch_data)  # BN calibration forward pass
                 smooth_loss = torch.tensor(0.0, device=device)
                 final_loss  = torch.tensor(0.0, device=device, requires_grad=True)
-
-            if _wandb_ok:
-                import wandb
-                wandb.log({
-                    f"{wandb_prefix}/smooth_loss": smooth_loss.item(),
-                    f"{wandb_prefix}/lambda": current_lambda,
-                    f"{wandb_prefix}/lr": cosine_annealed_lr(iteration_count),
-                    f"{wandb_prefix}/iteration": iteration_count,
-                })
 
             optimizer.zero_grad(set_to_none=True)
             final_loss.backward()
