@@ -52,10 +52,6 @@ def distribute_patch_scores_to_points(patch_scores, patch_size, num_points):
     return np.nan_to_num(point_scores, nan=0.0, posinf=0.0, neginf=0.0)
 
 
-# ---------------------------------------------------------------------------
-# Mahalanobis scorer — drop-in replacement for calculate_anomaly_scores
-# ---------------------------------------------------------------------------
-
 def fit_mahalanobis(model, data_loader, device, reg=1e-5, mode="full"):
     model.eval()
     all_embs = []
@@ -124,10 +120,6 @@ def calculate_anomaly_scores_mahalanobis(model, data_loader, mahal_params, devic
 
     return all_scores
 
-
-# ---------------------------------------------------------------------------
-# Velocity memory bank — captures normal dynamics / tendencies
-# ---------------------------------------------------------------------------
 
 @torch.inference_mode()
 def collect_ordered_embeddings(model, data_loader, device):
